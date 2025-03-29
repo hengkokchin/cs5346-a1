@@ -11,10 +11,12 @@
 
 <body>
     <h2>Chart 1: Zoomable Sunburst</h2>
-    <svg id="partitionSVG" width=480 height=480 viewBox="0 0 480 480"></svg>
+    <div style="height:400px; width:400px">
+    <svg id="partitionSVG" width=960 height=960 viewBox="0 0 960 960"></svg>
+    </div>
     <script>
         const format = d3.format(",d");
-        const width = 466;
+        const width = 932;
         const radius = width / 6;
 
         const arc = d3.arc()
