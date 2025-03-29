@@ -44,14 +44,14 @@
 
         d3.csv("./billboard_1990.csv").then(data => {
             let root = { name: "root", children: [] };
-            let catMap = {};
+            let genreMap = {};
             
             data.forEach(d => {
-                if (!catMap[d.Genre]) {
-                    catMap[d.Genre] = { name: d.Genre, children: [] };
-                    root.children.push(catMap[d.Genre]);
+                if (!genreMap[d.Genre]) {
+                    genreMap[d.Genre] = { name: d.Genre, children: [] };
+                    root.children.push(genreMap[d.Genre]);
                 }
-                catMap[d.Genre].children.push({ name: d.Subgenre, value: 1 });
+                genreMap[d.Genre].children.push({ name: d.Subgenre, value: 1 });
             });
 
             root = d3.hierarchy(root)
