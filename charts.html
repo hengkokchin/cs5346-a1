@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <head>
     <meta charset="utf-8">
-    <title>D3 v5 Zoomable Sunburst w/ d3.json()</title>
+    <title>Chart 1: Zoomable Sunburst</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@observablehq/stdlib"></script>
     <style>
@@ -33,7 +33,7 @@
                     (root);
         }
 
-        d3.json("./flare.json").then(data => {
+        d3.json("./billboard_1990.json").then(data => {
             
             console.log(data);
             const root = partition(data);
