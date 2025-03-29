@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3.js Billboard 1990 Chart</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .bar {
+            fill: steelblue;
+        }
+        .bar:hover {
+            fill: orange;
+        }
+        text {
+            font-size: 12px;
+        }
+        .axis-label {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .legend {
+            font-size: 12px;
+            fill: black;
+        }
+    </style>
+</head>
+<body>
+    <h2>Top Songs from Billboard 1990</h2>
+    <svg width="800" height="500"></svg>
+    <script>
+        const width = 800;
+        const height = 450;
+        const margin = { top: 40, right: 20, bottom: 100, left: 60 };
+        const svg = d3.select("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        const chartWidth = width - margin.left - margin.right;
+        const chartHeight = height - margin.top - margin.bottom;
+
+        const g = svg.append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const xScale = d3.scaleBand()
+            .range([0, chartWidth])
+            .padding(0.2);
+
+        const yScale = d3.scaleLinear()
+            .range([chartHeight, 0]);
+
+        const xAxis = g.append("g")
+            .attr("transform", `translate(0,${chartHeight})`)
+            .attr("class", "x-axis");
+
+        const yAxis = g.append("g").attr("class", "y-axis");
+
+        d3.csv("./billboard_1990.csv").then(data => {
+            data.forEach(d => d.weeks_on_chart = +d.weeks_on_chart);
+            
+            // Sort data by weeks_on_chart
+            data = data.sort((a, b) => b.weeks_on_chart - a.weeks_on_chart).slice(0, 10);
+            
+            xScale.domain(data.map(d => d.song));
+            yScale.domain([0, d3.max(data, d => d.weeks_on_chart)]);
+            
+            const bars = g.selectAll(".bar")
+                .data(data);
+
+            bars.enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr("x", d => xScale(d.song))
+                .attr("y", chartHeight)
+                .attr("width", xScale.bandwidth())
+                .attr("height", 0)
+                .transition()
+                .duration(1000)
+                .attr("y", d => yScale(d.weeks_on_chart))
+                .attr("height", d => chartHeight - yScale(d.weeks_on_chart));
+
+            xAxis.call(d3.axisBottom(xScale))
+                .selectAll("text")
+                .attr("transform", "rotate(-45)")
+                .style("text-anchor", "end");
+
+            yAxis.call(d3.axisLeft(yScale));
+        });
+    </script>
+</body>
+</html>
