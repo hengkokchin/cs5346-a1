@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3.js Slope Chart</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .axis line,
+        .axis path {
+            stroke: black;
+        }
+        .line {
+            stroke: black;
+            stroke-width: 2px;
+        }
+        .label {
+            font-size: 14px;
+            font-weight: bold;
+            fill: black;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <h2>Slope Chart Example</h2>
+    <svg width="600" height="400"></svg>
+    <script>
+        const data = [
+            { title: "Hold On (WP)", value1: 1, value2: 16 },
+            { title: "It Must Have Been Love", value1: 2, value2: 3 },
+            { title: "Nothing Compares 2 U", value1: 3, value2: 8 },
+            { title: "Poison", value1: 4, value2: 13 },
+            { title: "Vogue", value1: 5, value2: 12 },
+            { title: "Vision of Love", value1: 6, value2: 32 },
+            { title: "Another Day in Paradise", value1: 7, value2: 6 },
+            { title: "Hold On (EV)", value1: 8, value2: 40 },
+            { title: "Cradle of Love", value1: 9, value2: 57 },
+            { title: "Blaze of Glory", value1: 10, value2: 19 }
+        ];
+
+        const svg = d3.select("svg"),
+            width = +svg.attr("width"),
+            height = +svg.attr("height"),
+            margin = { top: 40, right: 50, bottom: 40, left: 50 };
+
+        const xPositions = { left: 100, right: width - 100 };
+
+        const yScale = d3.scaleLinear()
+            .domain([d3.min(data, d => Math.min(d.value1, d.value2)), d3.max(data, d => Math.max(d.value1, d.value2))])
+            .range([margin.top, height - margin.bottom]);
+
+        svg.append("g")
+            .attr("transform", `translate(${xPositions.left},0)`)
+            .call(d3.axisLeft(yScale));
+
+        svg.append("g")
+            .attr("transform", `translate(${xPositions.right},0)`)
+            .call(d3.axisRight(yScale));
+
+        svg.selectAll(".line")
+            .data(data)
+            .enter()
+            .append("line")
+            .attr("x1", xPositions.left)
+            .attr("x2", xPositions.right)
+            .attr("y1", d => yScale(d.value1))
+            .attr("y2", d => yScale(d.value2))
+            .attr("stroke", "black")
+            .attr("stroke-width", 2);
+
+        svg.selectAll(".label-left")
+            .data(data)
+            .enter()
+            .append("text")
+            .attr("x", xPositions.left - 15)
+            .attr("y", d => yScale(d.value1) - 5)
+            .attr("dy", "0.35em")
+            .attr("text-anchor", "end")
+            .attr("class", "label")
+            .text(d => `${d.title} (${d.value1})`);
+
+        svg.selectAll(".label-right")
+            .data(data)
+            .enter()
+            .append("text")
+            .attr("x", xPositions.right + 15)
+            .attr("y", d => yScale(d.value2) - 5)
+            .attr("dy", "0.35em")
+            .attr("text-anchor", "start")
+            .attr("class", "label")
+            .text(d => `${d.title} (${d.value2})`);
+    </script>
+</body>
+</html>
