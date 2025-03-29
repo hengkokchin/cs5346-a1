@@ -3,92 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>D3.js Billboard 1990 Chart</title>
+    <title>D3.js Zoomable Sunburst Chart</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
         }
-        .bar {
-            fill: steelblue;
+        .arc path {
+            stroke: #fff;
         }
-        .bar:hover {
-            fill: orange;
-        }
-        text {
+        .arc text {
             font-size: 12px;
-        }
-        .axis-label {
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .legend {
-            font-size: 12px;
-            fill: black;
+            text-anchor: middle;
         }
     </style>
 </head>
 <body>
-    <h2>Top Songs from Billboard 1990</h2>
-    <svg width="800" height="500"></svg>
+    <h2>Zoomable Sunburst Chart</h2>
+    <svg width="800" height="600"></svg>
     <script>
         const width = 800;
-        const height = 450;
-        const margin = { top: 40, right: 20, bottom: 100, left: 60 };
+        const height = 600;
+        const radius = Math.min(width, height) / 2;
+
         const svg = d3.select("svg")
             .attr("width", width)
-            .attr("height", height);
+            .attr("height", height)
+            .append("g")
+            .attr("transform", `translate(${width / 2},${height / 2})`);
 
-        const chartWidth = width - margin.left - margin.right;
-        const chartHeight = height - margin.top - margin.bottom;
+        const partition = d3.partition()
+            .size([2 * Math.PI, radius]);
 
-        const g = svg.append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
-
-        const xScale = d3.scaleBand()
-            .range([0, chartWidth])
-            .padding(0.2);
-
-        const yScale = d3.scaleLinear()
-            .range([chartHeight, 0]);
-
-        const xAxis = g.append("g")
-            .attr("transform", `translate(0,${chartHeight})`)
-            .attr("class", "x-axis");
-
-        const yAxis = g.append("g").attr("class", "y-axis");
+        const arc = d3.arc()
+            .startAngle(d => d.x0)
+            .endAngle(d => d.x1)
+            .innerRadius(d => d.y0)
+            .outerRadius(d => d.y1);
 
         d3.csv("./billboard_1990.csv").then(data => {
-            data.forEach(d => d.weeks_on_chart = +d.weeks_on_chart);
+            let root = { name: "root", children: [] };
+            let catMap = {};
             
-            // Sort data by weeks_on_chart
-            data = data.sort((a, b) => b.weeks_on_chart - a.weeks_on_chart).slice(0, 10);
-            
-            xScale.domain(data.map(d => d.song));
-            yScale.domain([0, d3.max(data, d => d.weeks_on_chart)]);
-            
-            const bars = g.selectAll(".bar")
-                .data(data);
+            data.forEach(d => {
+                if (!catMap[d.Genre]) {
+                    catMap[d.Genre] = { name: d.Genre, children: [] };
+                    root.children.push(catMap[d.Genre]);
+                }
+                catMap[d.Genre].children.push({ name: d.Subgenre, value: 1 });
+            });
 
-            bars.enter()
-                .append("rect")
-                .attr("class", "bar")
-                .attr("x", d => xScale(d.song))
-                .attr("y", chartHeight)
-                .attr("width", xScale.bandwidth())
-                .attr("height", 0)
-                .transition()
-                .duration(1000)
-                .attr("y", d => yScale(d.weeks_on_chart))
-                .attr("height", d => chartHeight - yScale(d.weeks_on_chart));
+            root = d3.hierarchy(root)
+                .sum(d => d.value)
+                .sort((a, b) => b.value - a.value);
 
-            xAxis.call(d3.axisBottom(xScale))
-                .selectAll("text")
-                .attr("transform", "rotate(-45)")
-                .style("text-anchor", "end");
+            partition(root);
 
-            yAxis.call(d3.axisLeft(yScale));
+            const path = svg.selectAll(".arc")
+                .data(root.descendants())
+                .enter().append("path")
+                .attr("class", "arc")
+                .attr("d", arc)
+                .style("fill", d => d.depth === 0 ? "#ddd" : d3.schemeCategory10[d.depth % 10])
+                .on("click", clicked);
+
+            function clicked(event, p) {
+                svg.transition().duration(750)
+                    .tween("scale", () => {
+                        const xd = d3.interpolate(svg.property("_current"), [p.x0, p.x1]),
+                              yd = d3.interpolate(svg.property("_current"), [p.y0, 1]);
+                        return t => {
+                            svg.property("_current", [xd(t), yd(t)]);
+                            path.attr("d", arc);
+                        };
+                    });
+            }
         });
     </script>
 </body>
