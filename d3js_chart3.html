@@ -1,1 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart 3: d3.js Bar Chart</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .axis line,
+        .axis path {
+            stroke: black;
+        }
+        .bar {
+            fill: steelblue;
+        }
+        .tooltip {
+            position: absolute;
+            background: white;
+            border: 1px solid black;
+            padding: 5px;
+            font-size: 12px;
+            pointer-events: none;
+            display: none;
+        }
+        .axis-title {
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2>Chart 3: d3.js Bar Chart</h2>
+    <h3>3)	How does the Spotify Streams counts look like for the top 30 titles from the Billboard in 1990?</h3>
+    <svg width="800" height="500"></svg>
+    <div class="tooltip"></div>
+    <script>
+        const data = [
+            { "Rank": 1, "Title": "Hold On", "Streams": 125755976 },
+            { "Rank": 2, "Title": "It Must Have Been Love", "Streams": 333690809 },
+            { "Rank": 3, "Title": "Nothing Compares 2 U", "Streams": 208150170 },
+            { "Rank": 4, "Title": "Poison", "Streams": 157501896 },
+            { "Rank": 5, "Title": "Vogue", "Streams": 163481756 },
+            { "Rank": 6, "Title": "Vision of Love", "Streams": 41348392 },
+            { "Rank": 7, "Title": "Another Day in Paradise", "Streams": 268028973 },
+            { "Rank": 8, "Title": "Hold On", "Streams": 29955038 },
+            { "Rank": 9, "Title": "Cradle of Love", "Streams": 13810238 },
+            { "Rank": 10, "Title": "Blaze of Glory", "Streams": 99123459 },
+            { "Rank": 11, "Title": "Do Me!", "Streams": 11912178 },
+            { "Rank": 12, "Title": "How Am I Supposed to Live Without You", "Streams": 153503422 },
+            { "Rank": 13, "Title": "Pump Up the Jam", "Streams": 171420293 },
+            { "Rank": 14, "Title": "Opposites Attract", "Streams": 17534501 },
+            { "Rank": 15, "Title": "Escapade", "Streams": 22761140 },
+            { "Rank": 16, "Title": "All I Wanna Do Is Make Love to You", "Streams": 91089150 },
+            { "Rank": 17, "Title": "Close to You", "Streams": 23053179 },
+            { "Rank": 18, "Title": "Black Velvet", "Streams": 181833843 },
+            { "Rank": 19, "Title": "Release Me", "Streams": 11331063 },
+            { "Rank": 20, "Title": "Don't Know Much", "Streams": 44798643 },
+            { "Rank": 21, "Title": "All Around the World", "Streams": 73672640 },
+            { "Rank": 22, "Title": "I Wanna Be Rich", "Streams": 551503 },
+            { "Rank": 23, "Title": "Rub You the Right Way", "Streams": 17619521 },
+            { "Rank": 24, "Title": "She Ain't Worth It", "Streams": 720058 },
+            { "Rank": 25, "Title": "If Wishes Came True", "Streams": 1142540 },
+            { "Rank": 26, "Title": "The Power", "Streams": 46088552 },
+            { "Rank": 27, "Title": "(Can't Live Without Your) Love and Affection", "Streams": 6110513 },
+            { "Rank": 28, "Title": "Love Will Lead You Back", "Streams": 33687668 },
+            { "Rank": 29, "Title": "Don't Wanna Fall in Love", "Streams": 9280804 },
+            { "Rank": 30, "Title": "Two to Make It Right", "Streams": 2967101 }
+        ];
+
+        const svg = d3.select("svg"),
+            width = +svg.attr("width") - 50,
+            height = +svg.attr("height") - 50,
+            margin = { top: 40, right: 50, bottom: 60, left: 60 };
+
+        // Divide Streams by 100,000 to display in hundreds of thousands
+        data.forEach(d => {
+            d.StreamsInHundredsThousands = d.Streams / 100000;
+        });
+
+        const xScale = d3.scaleBand()
+            .domain(data.map(d => d.Rank))
+            .range([margin.left, width - margin.right])
+            .padding(0.3);
+
+        const yScale = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.StreamsInHundredsThousands)])
+            .nice()
+            .range([height - margin.bottom, margin.top]);
+
+        svg.append("g")
+            .attr("transform", `translate(0,${height - margin.bottom})`)
+            .call(d3.axisBottom(xScale));
+
+        svg.append("g")
+            .attr("transform", `translate(${margin.left},0)`)
+            .call(d3.axisLeft(yScale));
+
+        const tooltip = d3.select(".tooltip");
+
+        svg.selectAll(".bar")
+            .data(data)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", d => xScale(d.Rank))
+            .attr("y", d => yScale(d.StreamsInHundredsThousands))
+            .attr("width", xScale.bandwidth())
+            .attr("height", d => height - margin.bottom - yScale(d.StreamsInHundredsThousands))
+            .on("mouseover", (event, d) => {
+                tooltip.style("display", "block")
+                    .html(`Rank: ${d.Rank} <br> Title: ${d.Title} <br> Streams: ${d.Streams.toLocaleString()}`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 10) + "px");
+            })
+            .on("mouseout", () => tooltip.style("display", "none"));
+
+        // X-Axis Title
+        svg.append("text")
+            .attr("class", "axis-title")
+            .attr("x", width / 2)
+            .attr("y", height - margin.bottom + 40)
+            .attr("text-anchor", "middle")
+            .text("Rank");
+
+        // Y-Axis Title (Positioned at the top of the Y-Axis)
+        svg.append("text")
+            .attr("class", "axis-title")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -height / 2)
+            .attr("y", margin.left - 40)
+            .attr("text-anchor", "middle")
+            .text("Streams (in Hundreds of Thousands)");
+    </script>
+</body>
+</html>
 
